@@ -1,6 +1,7 @@
 package com.universidad.compras.ejecucion;
 
 import com.universidad.compras.modelo.Solicitud;
+import com.universidad.compras.notificacion.NotificadorCambioEstado;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -10,7 +11,8 @@ class EjecucionSolicitudTest {
     void ejecutarReservaPresupuestoYGeneraOrden() {
         Solicitud s = new Solicitud("S-010", "ana@udes.edu.co", 3000000, "SOFTWARE", "CC-100");
         s.setEstado("APROBADA");
-        EjecutorSolicitud ejecutor = new EjecutorSolicitud(new PresupuestoService(), new OrdenCompraService());
+        EjecutorSolicitud ejecutor = new EjecutorSolicitud(
+            new PresupuestoService(), new OrdenCompraService(), new NotificadorCambioEstado());
 
         ejecutor.ejecutar(s, "Proveedor XYZ");
 
@@ -21,7 +23,8 @@ class EjecucionSolicitudTest {
     void deshacerSoloLaUltimaOperacionNoAfectaLaAnterior() {
         Solicitud s = new Solicitud("S-011", "luis@udes.edu.co", 4000000, "MATERIAL_OFICINA", "CC-200");
         s.setEstado("APROBADA");
-        EjecutorSolicitud ejecutor = new EjecutorSolicitud(new PresupuestoService(), new OrdenCompraService());
+        EjecutorSolicitud ejecutor = new EjecutorSolicitud(
+            new PresupuestoService(), new OrdenCompraService(), new NotificadorCambioEstado());
 
         assertDoesNotThrow(() -> {
             ejecutor.ejecutar(s, "Proveedor ABC");
@@ -36,7 +39,8 @@ class EjecucionSolicitudTest {
     void elHistorialConservaTodasLasOperacionesNoSoloLaUltima() {
         Solicitud s = new Solicitud("S-012", "ana@udes.edu.co", 2000000, "SOFTWARE", "CC-300");
         s.setEstado("APROBADA");
-        EjecutorSolicitud ejecutor = new EjecutorSolicitud(new PresupuestoService(), new OrdenCompraService());
+        EjecutorSolicitud ejecutor = new EjecutorSolicitud(
+            new PresupuestoService(), new OrdenCompraService(), new NotificadorCambioEstado());
 
         assertDoesNotThrow(() -> {
             ejecutor.ejecutar(s, "Proveedor DEF");
