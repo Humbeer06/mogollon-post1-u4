@@ -1,28 +1,23 @@
 package com.universidad.compras.aprobacion;
 
 import com.universidad.compras.modelo.Solicitud;
+import com.universidad.compras.notificacion.NotificadorCambioEstado;
 import org.springframework.stereotype.Service;
 
-/**
- * Implementación de ServicioAprobacion que arma la cadena de niveles
- * de aprobación. Agregar, quitar o reordenar un nivel se hace aquí,
- * en un único lugar, sin que ControladorSolicitudes conozca cuántos
- * niveles existen ni en qué orden se consultan.
- */
 @Service
 public class ServicioAprobacionCadena implements ServicioAprobacion {
 
     private final NivelAprobacion primerNivel;
+    private final NotificadorCambioEstado notificador;
 
-    public ServicioAprobacionCadena() {
+    public ServicioAprobacionCadena(NotificadorCambioEstado notificador) {
+        this.notificador = notificador;
+
         NivelAprobacion cumplimiento = new RevisorCumplimientoNormativo();
         NivelAprobacion supervisor = new SupervisorArea();
         NivelAprobacion gerente = new GerenteArea();
         NivelAprobacion director = new DirectorFinanciero();
 
-        // El Revisor de Cumplimiento va primero: si la solicitud es
-        // INTERNACIONAL, la resuelve él; si no, delega al Supervisor,
-        // que a su vez delega según el monto.
         cumplimiento.enlazarCon(supervisor);
         supervisor.enlazarCon(gerente);
         gerente.enlazarCon(director);
@@ -32,6 +27,9 @@ public class ServicioAprobacionCadena implements ServicioAprobacion {
 
     @Override
     public ResultadoAprobacion evaluar(Solicitud solicitud) {
-        return primerNivel.procesar(solicitud);
+        ResultadoAprobacion resultado = primerNivel.procesar(solicitud);
+        solicitud.setEstado(resultado.isAprobada() ? "APROBADA" : "RECHAZADA");
+        notificador.notificarCambio(solicitud);
+        return resultado;
     }
 }

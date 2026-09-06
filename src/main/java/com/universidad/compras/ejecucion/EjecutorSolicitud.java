@@ -1,24 +1,23 @@
 package com.universidad.compras.ejecucion;
 
 import com.universidad.compras.modelo.Solicitud;
+import com.universidad.compras.notificacion.NotificadorCambioEstado;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
-/**
- * Orquesta la ejecución de una solicitud aprobada: reserva
- * presupuesto y genera orden de compra como Commands independientes,
- * cada uno deshacible por separado, con su historial consultable.
- */
 @Service
 public class EjecutorSolicitud {
 
     private final PresupuestoService presupuestoService;
     private final OrdenCompraService ordenCompraService;
+    private final NotificadorCambioEstado notificador;
     private final HistorialOperaciones historial = new HistorialOperaciones();
 
-    public EjecutorSolicitud(PresupuestoService presupuestoService, OrdenCompraService ordenCompraService) {
+    public EjecutorSolicitud(PresupuestoService presupuestoService, OrdenCompraService ordenCompraService,
+                             NotificadorCambioEstado notificador) {
         this.presupuestoService = presupuestoService;
         this.ordenCompraService = ordenCompraService;
+        this.notificador = notificador;
     }
 
     public void ejecutar(Solicitud solicitud, String proveedor) {
@@ -33,6 +32,7 @@ public class EjecutorSolicitud {
         historial.registrar(orden);
 
         solicitud.setEstado("EJECUTADA");
+        notificador.notificarCambio(solicitud);
     }
 
     public void deshacerUltima() {
